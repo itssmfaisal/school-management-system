@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,11 +27,25 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(), user.getPassword(), user.isEnabled(), true, true, true,
-                mapRolesToAuthorities(user)
+                mapRolesAndPermissionsToAuthorities(user)
         );
     }
 
-    private Collection<? extends GrantedAuthority> mapRolesToAuthorities(User user) {
-        return user.getRoles().stream().map(r -> new SimpleGrantedAuthority(r.name())).collect(Collectors.toSet());
+    private Collection<? extends GrantedAuthority> mapRolesAndPermissionsToAuthorities(User user) {
+        // Roles are prefixed with ROLE_ as usual; permissions are added as plain authorities
+        Set<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+            .map(r -> new SimpleGrantedAuthority(r.name()))
+            .collect(Collectors.toSet());
+
+        authorities.addAll(user.getPermissions().stream()
+            .map(p -> new SimpleGrantedAuthority(p.name()))
+            .collect(Collectors.toSet()));
+
+        return authorities;
+    }
+
+    // Provide a method to get permission authorities (used by security checks elsewhere if needed)
+    public Collection<? extends GrantedAuthority> getPermissionAuthorities(User user) {
+        return user.getPermissions().stream().map(p -> new SimpleGrantedAuthority(p.name())).collect(Collectors.toSet());
     }
 }

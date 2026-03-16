@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import com.school.management.model.Permission;
 
 @Entity
 @Table(name = "users")
@@ -29,6 +30,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    private Set<Permission> permissions = new HashSet<>();
+
     public User() {}
 
     // getters and setters
@@ -46,4 +52,7 @@ public class User {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    public Set<Permission> getPermissions() { return permissions; }
+    public void setPermissions(Set<Permission> permissions) { this.permissions = permissions; }
 }
