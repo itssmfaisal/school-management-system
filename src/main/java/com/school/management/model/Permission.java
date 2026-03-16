@@ -1,0 +1,16 @@
+package com.school.management.model;
+
+public enum Permission {
+    MANAGE_USERS,
+    ASSIGN_PERMISSIONS,
+    CREATE_COURSE,
+    UPDATE_COURSE,
+    DELETE_COURSE,
+    ASSIGN_COURSE_GROUP,
+    MANAGE_ASSIGNMENTS,
+    GRADE_ASSIGNMENTS,
+    UPLOAD_SUBMISSION,
+    VIEW_MARKS,
+    MANAGE_RESOURCES,
+    MANAGE_NOTICES
+}
