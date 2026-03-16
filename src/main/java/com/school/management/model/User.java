@@ -35,6 +35,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Set<Permission> permissions = new HashSet<>();
 
+    @Enumerated(EnumType.STRING)
+    private UserType userType = UserType.STUDENT;
+
     public User() {}
 
     // getters and setters
@@ -55,4 +58,7 @@ public class User {
 
     public Set<Permission> getPermissions() { return permissions; }
     public void setPermissions(Set<Permission> permissions) { this.permissions = permissions; }
+
+    public UserType getUserType() { return userType; }
+    public void setUserType(UserType userType) { this.userType = userType; }
 }

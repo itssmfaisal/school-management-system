@@ -20,9 +20,10 @@ All endpoints are under `/api/*`. Authenticate with JWT by sending `Authorizatio
   ```json
   { "name": "Alice", "email": "alice@example.com", "password": "s3cret" }
   ```
-  - Response: 201 Created
+  - Notes: Public registration is for **students only**. Employees cannot register themselves — employees must be created by an admin via the admin API.
+  - Response: 201 Created (returns auth token)
   ```json
-  { "id": 12, "name": "Alice", "email": "alice@example.com" }
+  { "token": "eyJhbGciOi...", "expiresIn": 86400000 }
   ```
 
 - POST `/api/auth/login`
@@ -36,6 +37,84 @@ All endpoints are under `/api/*`. Authenticate with JWT by sending `Authorizatio
   ```
 
 ---
+
+## Profile
+
+- GET `/api/profile`
+  - Headers: `Authorization: Bearer <token>`
+  - Description: Returns the authenticated user's full profile including `id`, `name`, `email`, `roles`, and `permissions`.
+  - Response: 200 OK
+  ```json
+  {
+    "id": 12,
+    "name": "Alice",
+    "email": "alice@example.com",
+    "enabled": true,
+    "createdAt": "2026-03-16T12:00:00Z",
+    "roles": ["ROLE_TEACHER"],
+    "permissions": ["CREATE_COURSE","MANAGE_RESOURCES"]
+  }
+  ```
+
+---
+
+## Permissions
+
+- POST `/api/users/{id}/permissions`
+  - Headers: `Authorization: Bearer <token>`
+  - Payload (`PermissionUpdateRequest`):
+  ```json
+  { "add": ["CREATE_COURSE"], "remove": ["UPLOAD_SUBMISSION"] }
+  ```
+  - Description: Modify the target user's permission set. Behavior rules:
+    - Users with `ROLE_ADMIN` may add/remove any permissions.
+    - Non-admin users require the `ASSIGN_PERMISSIONS` permission to call this endpoint.
+    - Non-admin users may only add or remove permissions that they themselves currently possess (subset restriction).
+  - Responses:
+    - 200 OK: returns updated permission list
+      ```json
+      ["CREATE_COURSE","MANAGE_RESOURCES"]
+      ```
+    - 403 Forbidden: caller lacks `ASSIGN_PERMISSIONS` or is trying to assign permissions they don't have.
+    - 400 Bad Request: invalid permission names.
+
+---
+
+## User Types
+
+- Two user types exist: `STUDENT` and `EMPLOYEE`.
+  - `STUDENT`: may self-register via `/api/auth/register`.
+  - `EMPLOYEE`: created only by admin via `/api/admin/employees` and assigned roles/permissions. Employee roles include `ROLE_ADMIN`, `ROLE_TEACHER`, `ROLE_STUDENT` (for staff acting as instructors), `ROLE_CLEANER`, `ROLE_OFFICE_STAFF` (treat as application-specific roles).
+
+---
+
+## Admin (Employee Management)
+
+- POST `/api/admin/employees`
+  - Headers: `Authorization: Bearer <token>` (must be `ROLE_ADMIN`)
+  - Payload (`CreateEmployeeRequest`):
+  ```json
+  {
+    "name": "Bob",
+    "email": "bob@school.local",
+    "password": "tempPass123",
+    "roles": ["ROLE_TEACHER"],
+    "permissions": ["CREATE_COURSE","MANAGE_NOTICES"]
+  }
+  ```
+  - Response: 200 OK — returns the created `User` object (without raw password).
+
+---
+
+## Permission Groups
+
+- POST `/api/permission-groups` (admin)
+  - Payload: a `PermissionGroup` JSON with `name` and `permissions` array.
+  - Response: 200 OK — created `PermissionGroup`.
+
+- POST `/api/permission-groups/{groupId}/assign/{userId}` (admin)
+  - Assigns all permissions from the group to the target user. Response: updated permission list for the user.
+
 
 ## Courses
 

@@ -51,6 +51,7 @@ public class AuthController {
         HashSet<Role> roles = new HashSet<>();
         roles.add(Role.ROLE_STUDENT);
         u.setRoles(roles);
+        u.setUserType(com.school.management.model.UserType.STUDENT);
         userRepository.save(u);
         String token = jwtUtil.generateToken(u.getEmail());
         return ResponseEntity.ok(new AuthResponse(token));
